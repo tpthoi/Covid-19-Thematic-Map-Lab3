@@ -9,8 +9,8 @@ The COVID-19 case/death data you will be using are originally from <a href="http
 
 <h3>Links To Map</h3>
 <ul>
-<li><a href="">Map 1</a></li>
-<li><a href="">Map 2</a></li>
+<li><a href="https://tpthoi.github.io/Covid-19-Thematic-Map-Lab3/map1.html">Map 1</a></li>
+<li><a href="https://tpthoi.github.io/Covid-19-Thematic-Map-Lab3/map2.html">Map 2</a></li>
 </ul>
 
 <h3>Screenshots</h3>
