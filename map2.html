@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>US County Covid-19 Cases Proportional Symbols Map</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css" rel="stylesheet" />
+    <link href="https://raw.githubusercontent.com/gka/chroma.js/master/chroma.min.js" rel="stylesheet" />
+    <style>
+        /* full screen */
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+
+        .map-overlay {
+            position: absolute;
+            bottom: -50;
+            left: 10;
+            background: rgba(255, 255, 255, 0.8);
+            border-style: solid;
+            border-width: 1px;
+            border-color: rgba(0, 0, 0, 0.2);
+            margin-left: 20px;
+            font-family: Arial, sans-serif;
+            overflow: auto;
+            border-radius: 3px;
+        }
+
+
+        /* the layout of the legend panel */
+        #legend {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            margin-right: 20px;
+            border-radius: 3px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 40px;
+            width: 100px;
+        }
+
+        /* each line for a break */
+        .break {
+            position: relative;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        /* basic style for a dot/circle */
+        .dot {
+            display: inline-block;
+            margin-top: 5px;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        /* the label for the dot */
+        .dot-label {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-style: italic;
+        }
+
+        /* the text color of a hyper link */
+        a {
+            color: black
+        }
+    </style>
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
+
+</head>
+
+<body>
+    <div id="map"></div>
+    <div class='map-overlay' id='features'>
+        <h2>US County Covid-19 Cases Proportional Symbols Map</h2>
+        <div id='text-escription'>
+            <p>Click on a County!</p>
+        </div>
+    </div>
+    <div class='map-overlay' id='legend'></div>
+    <div id="legend"></div>
+    <script>
+        mapboxgl.accessToken =
+            'pk.eyJ1IjoibWFsLXdvb2QiLCJhIjoiY2oyZ2t2em50MDAyMzJ3cnltMDFhb2NzdiJ9.X-D4Wvo5E5QxeP7K_I3O8w';
+
+        let map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/mapbox/dark-v10',
+            projection: 'albers',
+            zoom: 3.5, // starting zoom
+            center: [-100, 40] // starting center
+        });
+
+        let grades = [2000, 4000, 6000, 8000, 10000],
+            colors = ['#9EBC9E', '#FFCFD2', '#FFAFC5', '#553E4E',
+                '#E0479E'
+            ],
+            radii = [2, 4, 6, 8, 10];
+
+        map.on('load', () => {
+            map.addSource('counts', {
+                'type': 'geojson',
+                'data': 'assets/us-covid-2020-counts.geojson'
+            });
+
+            map.addLayer({
+                    'id': 'counts-point',
+                    'type': 'circle',
+                    'source': 'counts',
+                    'minzoom': 3.5,
+                    'paint': {
+                        // increase the radius of the circle as the zoom level and dbh value increases
+                        'circle-radius': {
+                            'property': 'cases',
+                            'stops': [
+                                [{
+                                    zoom: 3.5,
+                                    value: grades[0]
+                                }, radii[0]],
+                                [{
+                                    zoom: 3.5,
+                                    value: grades[1]
+                                }, radii[1]],
+                                [{
+                                    zoom: 3.5,
+                                    value: grades[2]
+                                }, radii[2]],
+                                [{
+                                    zoom: 3.5,
+                                    value: grades[3]
+                                }, radii[3]],
+                                [{
+                                    zoom: 3.5,
+                                    value: grades[4]
+                                }, radii[4]]
+                            ]
+                        },
+                        'circle-color': {
+                            'property': 'cases',
+                            'stops': [
+                                [grades[0], colors[0]],
+                                [grades[1], colors[1]],
+                                [grades[2], colors[2]],
+                                [grades[3], colors[3]],
+                                [grades[4], colors[4]]
+                            ]
+                        },
+                        'circle-stroke-color': 'white',
+                        'circle-stroke-width': 1,
+                        'circle-opacity': 0.6
+                    }
+                },
+                'waterway-label'
+            );
+        });
+
+        // click on tree to view casesnitude in a popup
+        map.on('click', 'counts-point', (event) => {
+            new mapboxgl.Popup()
+                .setLngLat(event.features[0].geometry.coordinates)
+                .setHTML(`
+                <p><strong>County, State: </strong> ${event.features[0].properties.county + ", " + event.features[0].properties.state}</p>
+                <strong>Cases:</strong> ${event.features[0].properties.cases}
+                <p><strong>Deaths:</strong> ${event.features[0].properties.deaths}</p>
+                   `)
+                .addTo(map);
+        });
+
+        // create legend
+        const legend = document.getElementById('legend');
+
+        //set up legend grades and labels
+        var labels = ['<strong>Covid-19 Cases Count (per County)</strong>'],
+            vbreak;
+        //iterate through grades and create a scaled circle and label for each
+        for (var i = 0; i < grades.length; i++) {
+            vbreak = "~" + grades[i];
+            // you need to manually adjust the radius of each dot on the legend 
+            // in order to make sure the legend can be properly referred to the dot on the map.
+            dot_radii = 2 * radii[i];
+            labels.push(
+                '<p class="break"><i class="dot" style="background:' + colors[i] + '; width: ' + dot_radii +
+                'px; height: ' +
+                dot_radii + 'px; "></i> <span class="dot-label" style="top: ' + dot_radii / 2 + 'px;">' + "    " +
+                vbreak +
+                '</span></p>');
+
+        }
+
+
+
+        const source =
+            '<p style="text-align: right; font-size:10pt">Source: <a href="https://github.com/nytimes/covid-19-data/blob/43d32dde2f87bd4dafbb7d23f5d9e878124018b8/live/us-counties.csv">Covid-19-data</a></p>';
+
+        legend.innerHTML = labels.join('') + source;
+    </script>
+</body>
+
+</html>
