@@ -24,7 +24,6 @@ The COVID-19 case/death data you will be using are originally from <a href="http
 <img src="img/ProportionalMap.png" alt="ProportinalMap">
 
 <h5>Credits</h5>
-<h3>Links To Map</h3>
 <ul>
 <li><a href="https://docs.mapbox.com/mapbox.js/api/">MapBox Library</a></li>
 <li><a href="https://github.com/jakobzhao/geog495/tree/main/labs/lab04">Professor Zhao's Github Tutorial</a></li>
